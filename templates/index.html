@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - 订餐管理系统{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="display-4">欢迎使用订餐管理系统</h1>
+    {% if current_user.is_authenticated %}
+        <p class="lead">您已登录为: {{ current_user.username }}</p>
+        {% if current_user.is_admin %}
+            <div class="mt-4">
+                <h2>管理员功能</h2>
+                <div class="list-group w-50 mx-auto">
+                    <a href="{{ url_for('dishes') }}" class="list-group-item list-group-item-action">管理菜品</a>
+                    <a href="{{ url_for('orders') }}" class="list-group-item list-group-item-action">查看订单</a>
+                    <a href="{{ url_for('restaurants') }}" class="list-group-item list-group-item-action">管理餐厅</a>
+                </div>
+            </div>
+        {% else %}
+            <div class="mt-4">
+                <h2>用户功能</h2>
+                <div class="list-group w-50 mx-auto">
+                    <a href="{{ url_for('restaurants') }}" class="list-group-item list-group-item-action">浏览餐厅</a>
+                    <a href="{{ url_for('orders') }}" class="list-group-item list-group-item-action">我的订单</a>
+                    <a href="{{ url_for('create_order') }}" class="list-group-item list-group-item-action">创建订单</a>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="lead">请登录或注册以使用系统功能</p>
+        <div class="mt-4">
+            <a href="{{ url_for('login') }}" class="btn btn-primary me-2">登录</a>
+            <a href="{{ url_for('register') }}" class="btn btn-secondary">注册</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

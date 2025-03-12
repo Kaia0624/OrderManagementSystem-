@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}订单列表 - 订餐管理系统{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">订单列表</h1>
+    
+    {% if not current_user.is_admin %}
+    <div class="mb-3">
+        <a href="{{ url_for('create_order') }}" class="btn btn-primary">创建新订单</a>
+    </div>
+    {% endif %}
+    
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>订单号</th>
+                    {% if current_user.is_admin %}
+                    <th>用户</th>
+                    {% endif %}
+                    <th>订单时间</th>
+                    <th>状态</th>
+                    <th>总金额</th>
+                    <th>详情</th>
+                    {% if current_user.is_admin %}
+                    <th>操作</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders.items %}
+                <tr>
+                    <td>#{{ order.id }}</td>
+                    {% if current_user.is_admin %}
+                    <td>{{ order.user.username }}</td>
+                    {% endif %}
+                    <td>{{ order.order_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>
+                        <span class="badge {% if order.status == '已完成' %}bg-success{% elif order.status == '准备中' %}bg-warning{% else %}bg-info{% endif %}">
+                            {{ order.status }}
+                        </span>
+                    </td>
+                    <td>¥{{ "%.2f"|format(order.total_amount) }}</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#orderModal{{ order.id }}">
+                            查看详情
+                        </button>
+                    </td>
+                    {% if current_user.is_admin %}
+                    <td>
+                        <div class="btn-group">
+                            {% if order.status != '准备中' %}
+                            <a href="{{ url_for('update_order_status', id=order.id, status='准备中') }}" class="btn btn-sm btn-warning">标记为准备中</a>
+                            {% endif %}
+                            {% if order.status != '已完成' %}
+                            <a href="{{ url_for('update_order_status', id=order.id, status='已完成') }}" class="btn btn-sm btn-success">标记为已完成</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="{% if current_user.is_admin %}7{% else %}5{% endif %}" class="text-center">暂无订单</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 分页导航 -->
+    {% if orders.pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if orders.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('orders', page=orders.prev_num) }}">&laquo; 上一页</a>
+            </li>
+            {% endif %}
+
+            {% for page_num in orders.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                {% if page_num %}
+                    {% if page_num == orders.page %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('orders', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if orders.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('orders', page=orders.next_num) }}">下一页 &raquo;</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    <!-- 订单详情模态框 -->
+    {% for order in orders.items %}
+    <div class="modal fade" id="orderModal{{ order.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">订单 #{{ order.id }} 详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>菜品</th>
+                                <th>数量</th>
+                                <th>单价</th>
+                                <th>小计</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detail in order.order_details %}
+                            <tr>
+                                <td>{{ detail.dish.name }}</td>
+                                <td>{{ detail.quantity }}</td>
+                                <td>¥{{ "%.2f"|format(detail.unit_price) }}</td>
+                                <td>¥{{ "%.2f"|format(detail.subtotal) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>总计：</strong></td>
+                                <td><strong>¥{{ "%.2f"|format(order.total_amount) }}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %} 

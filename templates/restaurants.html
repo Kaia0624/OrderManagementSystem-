@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}餐厅列表 - 订餐管理系统{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">餐厅列表</h1>
+    
+    {% if current_user.is_authenticated and current_user.is_admin %}
+    <div class="mb-3">
+        <a href="{{ url_for('add_restaurant') }}" class="btn btn-primary">添加餐厅</a>
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        {% for restaurant in restaurants %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ restaurant.name }}</h5>
+                    <p class="card-text">{{ restaurant.description or '暂无描述' }}</p>
+                    <p class="card-text"><strong>地址：</strong> {{ restaurant.address }}</p>
+                    <p class="card-text"><strong>电话：</strong> {{ restaurant.phone }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="btn-group">
+                            <a href="{{ url_for('dishes', restaurant_id=restaurant.id) }}" class="btn btn-sm btn-outline-primary">查看菜品</a>
+                            {% if current_user.is_authenticated %}
+                                {% if current_user.is_admin %}
+                                <a href="{{ url_for('edit_restaurant', id=restaurant.id) }}" class="btn btn-sm btn-outline-secondary">编辑</a>
+                                <a href="{{ url_for('delete_restaurant', id=restaurant.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定要删除这个餐厅吗？')">删除</a>
+                                {% else %}
+                                <form action="{{ url_for('toggle_favorite', id=restaurant.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm {% if restaurant in current_user.favorites|map(attribute='restaurant') %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                                        {% if restaurant in current_user.favorites|map(attribute='restaurant') %}
+                                        取消收藏
+                                        {% else %}
+                                        收藏
+                                        {% endif %}
+                                    </button>
+                                </form>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">{{ restaurant.dishes|length }} 个菜品</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <p class="text-center">暂无餐厅</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 
